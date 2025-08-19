@@ -16,34 +16,16 @@ async def fetch_data(lat, lon):
     params = {
         "latitude": lat,
         "longitude": lon,
-        # Текущие данные: температура, ощущение, погода, влажность, давление
         "current": "temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,pressure_msl",
-        # Почасовые данные: ветер (скорость, направление, порывы)
         "hourly": "wind_speed_10m,wind_direction_10m,wind_gusts_10m",
-        # Ежедневные данные: восход, закат, макс/мин температура
         "daily": "sunrise,sunset,temperature_2m_max,temperature_2m_min",
         "timezone": "auto",
-        "forecast_days": 1,  # Только сегодняшний прогноз
+        "forecast_days": 1,
         "temperature_unit": "celsius",
         "wind_speed_unit": "kmh",
         "precipitation_unit": "mm",
         "timeformat": "iso8601"
     }
-
-    # 0: "Ясно",
-    # 1: "Преимущественно ясно",
-    # 2: "Переменная облачность",
-    # 3: "Пасмурно",
-    # 45: "Туман",
-    # 48: "Изморозь",
-    # 51: "Лекая морось",
-    # 53: "Умеренная морось",
-    # 55: "Сильная морось",
-    # 61: "Небольшой дождь",
-    # 63: "Умеренный дождь",
-    # 65: "Сильный дождь",
-    # 80: "Ливень",
-    # 95: "Гроза"
 
     try:
         async with AsyncClient(timeout=30.0) as client:
@@ -63,18 +45,10 @@ async def fetch_data(lat, lon):
         )
 
 
-async def main():
-    data = await fetch_data(55.7558, 37.6176)
-    return print(data)
-
-
-if __name__ == '__main__':
-    asyncio.run(main())
-
-
 def get_wind_direction(degrees):
     directions = ["С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ"]
     index = round(degrees / 45) % 8
+
     return directions[index]
 
 
@@ -99,14 +73,16 @@ def get_weather_description(code):
 
 
 def get_humidity_status(humidity):
-    if humidity < 30:
-        return "сухой воздух (норма: 40-60%)"
-    elif 30 <= humidity <= 60:
-        return "комфортная влажность (норма: 40-60%)"
-    elif 61 <= humidity <= 70:
-        return "повышенная влажность (норма: 40-60%)"
-    else:
-        return "высокая влажность (норма: 40-60%)"
+    match humidity:
+        case _ if humidity < 30:
+            return "сухой воздух (норма: 40-60%)"
+        case _ if 30 <= humidity <= 60:
+            return "комфортная влажность (норма: 40-60%)"
+        case _ if 61 <= humidity <= 70:
+            return "повышенная влажность (норма: 40-60%)"
+
+        case _:
+            return "высокая влажность (норма: 40-60%)"
 
 
 def get_pressure_status(pressure):
@@ -126,21 +102,22 @@ def get_pressure_status(pressure):
 
 def format_time(time_str):
     dt = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+
     return dt.strftime("%H:%M")
 
 
 async def get_weather_data(lat, lon):
-    data = await fetch_data(lat, lon)
+    data = await fetch_data(lat=55.7558, lon=37.6176)
 
     current = data['current']
     daily = data['daily']
     hourly = data['hourly']
 
-    # Получаем текущий час для актуальных данных о ветре
+    # текущий час для актуальных данных о ветре
     current_time = current['time']
     current_hour_index = hourly['time'].index(current_time[:13] + ':00')
 
-    # Получаем дополнительные статусы
+    # доп статусы
     humidity_status = get_humidity_status(current['relative_humidity_2m'])
     pressure_status = get_pressure_status(current['pressure_msl'])
     wind_direction_deg = hourly['wind_direction_10m'][current_hour_index]
@@ -175,3 +152,8 @@ async def get_weather_data(lat, lon):
     }
 
     return weather_data
+
+
+if __name__ == '__main__':
+    weather_data = asyncio.run(get_weather_data(lat=55.7558, lon=37.6176))
+    print(weather_data)
