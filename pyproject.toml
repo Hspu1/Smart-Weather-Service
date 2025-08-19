@@ -1,5 +1,5 @@
 [project]
-name = "weather-aggregator"
+name = "smart-weather-service"
 version = "0.1.0"
 description = ""
 authors = [

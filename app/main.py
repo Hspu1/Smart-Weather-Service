@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 
 app = FastAPI(
-    title="Weather-Service",
+    title="Smart-Weather-Service",
     default_response_class=ORJSONResponse
 )
 
