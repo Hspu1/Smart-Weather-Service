@@ -37,6 +37,7 @@ async def fetch_data(data: Annotated[GeographicalCoordinates, Depends()]) -> dic
             status_code=503,
             detail=f"Ошибка подключения к Open-Meteo: {str(e)}"
         )
+
     except HTTPStatusError as e:
         raise HTTPException(
             status_code=502,
@@ -53,20 +54,20 @@ def get_wind_direction(degrees):
 
 def get_weather_description(code):
     weather_codes = {
-        0: "Ясно ☀️",
-        1: "Преимущественно ясно 🌤",
-        2: "Переменная облачность ⛅",
-        3: "Пасмурно ☁️",
-        45: "Туман 🌫",
-        48: "Изморозь 🌫",
-        51: "Лекая морось 🌧",
-        53: "Умеренная морось 🌧",
-        55: "Сильная морось 🌧",
-        61: "Небольшой дождь 🌧",
-        63: "Умеренный дождь 🌧",
-        65: "Сильный дождь 🌧",
-        80: "Ливень ⛈",
-        95: "Гроза ⛈"
+        0: "Ясно",
+        1: "Преимущественно ясно",
+        2: "Переменная облачность",
+        3: "Пасмурно",
+        45: "Туман",
+        48: "Изморозь",
+        51: "Лекая морось",
+        53: "Умеренная морось",
+        55: "Сильная морось",
+        61: "Небольшой дождь",
+        63: "Умеренный дождь",
+        65: "Сильный дождь",
+        80: "Ливень",
+        95: "Гроза"
     }
     return weather_codes[code]
 
@@ -123,7 +124,7 @@ async def get_weather_data(user_data: Annotated[GeographicalCoordinates, Depends
     daily = data['daily']
     hourly = data['hourly']
 
-    # текущий час для актуальных данных о ветре
+    # текущий час
     current_time = current['time']
     current_hour_index = hourly['time'].index(current_time[:13] + ':00')
 
@@ -140,7 +141,6 @@ async def get_weather_data(user_data: Annotated[GeographicalCoordinates, Depends
             "высота": f"{data['elevation']} м над уровнем моря",
             "часовой_пояс": data['timezone']
         },
-        "время_данных": f"{format_time(current['time'])} (МСК)",
         "температура": {
             "текущая": f"{current['temperature_2m']}°C",
             "ощущается_как": f"{current['apparent_temperature']}°C",
@@ -156,8 +156,8 @@ async def get_weather_data(user_data: Annotated[GeographicalCoordinates, Depends
         "давление": f"{current['pressure_msl']} гПа - {pressure_status}",
         "погодные_условия": get_weather_description(current['weather_code']),
         "время_солнца": {
-            "восход": f"{format_time(daily['sunrise'][0])} МСК",
-            "закат": f"{format_time(daily['sunset'][0])} МСК"
+            "восход": f"{format_time(daily['sunrise'][0])} по местному времени",
+            "закат": f"{format_time(daily['sunset'][0])} по местному времени"
         }
     }
 
