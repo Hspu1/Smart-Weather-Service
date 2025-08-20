@@ -1,7 +1,10 @@
+import asyncio
 import json
 from datetime import datetime
 from typing import Annotated, Any
 
+from geopy import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from httpx import AsyncClient, RequestError, HTTPStatusError
 from fastapi import Depends, HTTPException, Request
 
@@ -9,6 +12,29 @@ from app.backend import GeographicalCoordinates
 
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+
+
+async def get_location_name(data: Annotated[GeographicalCoordinates, Depends()]) -> str:
+    geolocator = Nominatim(user_agent="Smart-Weather-Service")
+    try:
+        location = await asyncio.to_thread(geolocator.reverse, (data.lat, data.lon), exactly_one=True)
+        if location:
+            address = location.raw.get("address", {})
+
+            return (
+                    address.get("city") or address.get("town")
+                    or address.get("village") or address.get("county")
+                    or address.get("state") or address.get("country")
+            )
+
+        return (
+            "Неизвестное место "
+            "(не является официально признанным "
+            "городом/деревней/округом/штатом/страной)"
+        )
+
+    except (GeocoderTimedOut, GeocoderServiceError):
+        return "Ошибка геокодирования"
 
 
 async def fetch_data(data: Annotated[GeographicalCoordinates, Depends()]) -> dict[str, Any]:
@@ -134,8 +160,11 @@ async def get_weather_data(user_data: Annotated[GeographicalCoordinates, Depends
     wind_direction_deg = hourly['wind_direction_10m'][current_hour_index]
     wind_direction_text = get_wind_direction(wind_direction_deg)
 
+    location_name = await get_location_name(data=user_data)
+
     weather_data = {
         "местоположение": {
+            "название": location_name,
             "широта": f"{data['latitude']}° с.ш.",
             "долгота": f"{data['longitude']}° в.д.",
             "высота": f"{data['elevation']} м над уровнем моря",
