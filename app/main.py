@@ -2,11 +2,16 @@ from fastapi.responses import ORJSONResponse
 from uvicorn import run
 from fastapi import FastAPI
 
+from app.backend import get_weather_rout
+from app.core import lifespan
+
 
 app = FastAPI(
     title="Smart-Weather-Service",
-    default_response_class=ORJSONResponse
+    default_response_class=ORJSONResponse,
+    lifespan=lifespan
 )
+app.include_router(get_weather_rout)
 
 
 if __name__ == '__main__':

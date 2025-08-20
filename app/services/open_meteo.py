@@ -1,9 +1,9 @@
-import asyncio
+import json
 from datetime import datetime
-from typing import Annotated, Dict, Any
+from typing import Annotated, Any
 
 from httpx import AsyncClient, RequestError, HTTPStatusError
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 
 from app.backend import GeographicalCoordinates
 
@@ -11,11 +11,10 @@ from app.backend import GeographicalCoordinates
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 
-# async def fetch_data(data: Annotated[GeographicalCoordinates, Depends()]) -> Dict[str, Any]:
-async def fetch_data(lat, lon):
+async def fetch_data(data: Annotated[GeographicalCoordinates, Depends()]) -> dict[str, Any]:
     params = {
-        "latitude": lat,
-        "longitude": lon,
+        "latitude": data.lat,
+        "longitude": data.lon,
         "current": "temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,pressure_msl",
         "hourly": "wind_speed_10m,wind_direction_10m,wind_gusts_10m",
         "daily": "sunrise,sunset,temperature_2m_max,temperature_2m_min",
@@ -106,8 +105,19 @@ def format_time(time_str):
     return dt.strftime("%H:%M")
 
 
-async def get_weather_data(lat, lon):
-    data = await fetch_data(lat=55.7558, lon=37.6176)
+async def get_weather_data(user_data: Annotated[GeographicalCoordinates, Depends()], request: Request) -> dict[str, str]:
+    redis_cache = request.app.state.redis_cache
+    cache_key = f"weather:{user_data.lat}:{user_data.lon}"
+
+    cached_data = await redis_cache.get(cache_key)
+    if cached_data:
+        result = json.loads(cached_data)
+        # json.loads преобразует строку JSON в питон словарь, json.dumps - наоборот
+        result["cached"] = True
+
+        return result
+
+    data = await fetch_data(data=user_data)
 
     current = data['current']
     daily = data['daily']
@@ -151,9 +161,7 @@ async def get_weather_data(lat, lon):
         }
     }
 
+    await redis_cache.set(cache_key, json.dumps(weather_data), ex=600)
+    weather_data["cached"] = False
+
     return weather_data
-
-
-if __name__ == '__main__':
-    weather_data = asyncio.run(get_weather_data(lat=55.7558, lon=37.6176))
-    print(weather_data)
