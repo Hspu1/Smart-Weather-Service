@@ -15,14 +15,12 @@ from app.services.open_meteo import (
 
 
 async def get_weather_data(user_data: Annotated[GeographicalCoordinates, Depends()]) -> dict[str, str]:
-    redis = redis_cache
     cache_key = f"weather:{user_data.latitude}:{user_data.longitude}"
 
-    cached_data = await redis.get(cache_key)
+    cached_data = await redis_cache.get(cache_key)
     if cached_data:
         result = loads(cached_data)
         # json.loads преобразует строку JSON в питон словарь, json.dumps - наоборот
-        result["cached"] = True
 
         return result
 
@@ -73,6 +71,5 @@ async def get_weather_data(user_data: Annotated[GeographicalCoordinates, Depends
     }
 
     await redis_cache.set(cache_key, dumps(weather_data), ex=600)
-    weather_data["cached"] = False
 
     return weather_data

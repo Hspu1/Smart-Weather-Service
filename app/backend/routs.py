@@ -14,9 +14,25 @@ async def get_weather(user_input: GeographicalCoordinates):
 
 
 @get_weather_rout.get(path="/get-weather", status_code=200)
-async def create_task(lat: float, lon: float):
-    user_input = GeographicalCoordinates(latitude=lat, longitude=lon)
+async def create_task(latitude: float, longitude: float):
+    user_input = GeographicalCoordinates(latitude=latitude, longitude=longitude)
     task = await get_weather.kiq(user_input=user_input)
-    result = await task.wait_result(timeout=7)
 
-    return result.return_value
+    return {
+        "айди": task.task_id,
+    }
+
+
+@get_weather_rout.get(path="/task-result/{task_id}", status_code=200)
+async def get_task_result(task_id: str) -> dict[str, str | dict]:
+    result = await broker.result_backend.get_result(task_id=task_id)
+    if result.is_err:
+        return {"статус": "неверный айди или географические координаты"}
+
+    elif result is None:
+        return {"статус": "выполняется"}
+
+    return {
+        "статус": "успешно",
+        "результат": result.return_value
+    }
