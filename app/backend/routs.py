@@ -6,7 +6,6 @@ from app.backend import GeographicalCoordinates
 from app.core.lifespan import broker
 from app.services import get_weather_data
 
-
 get_weather_rout = APIRouter()
 
 
