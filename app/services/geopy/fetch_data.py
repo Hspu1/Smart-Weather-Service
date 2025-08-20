@@ -3,7 +3,7 @@ from typing import Annotated, Any
 from fastapi import Depends, HTTPException
 from httpx import AsyncClient, RequestError, HTTPStatusError
 
-from app.backend import GeographicalCoordinates
+from app.backend.schemas import GeographicalCoordinates
 from app.services.open_meteo import OPEN_METEO_URL
 
 

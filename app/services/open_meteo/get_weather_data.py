@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.backend import GeographicalCoordinates
+from app.backend.schemas import GeographicalCoordinates
 from app.core import redis_cache
 
 from app.services.geopy import fetch_data

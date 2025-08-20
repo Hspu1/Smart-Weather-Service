@@ -5,7 +5,7 @@ from fastapi import Depends
 from geopy import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
-from app.backend import GeographicalCoordinates
+from app.backend.schemas import GeographicalCoordinates
 
 
 async def get_location_name(data: Annotated[GeographicalCoordinates, Depends()]) -> str:
