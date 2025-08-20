@@ -2,8 +2,10 @@ from fastapi.responses import ORJSONResponse
 from uvicorn import run
 from fastapi import FastAPI
 
-from app.backend import get_weather_rout
+from app.backend import GeographicalCoordinates
 from app.core import lifespan
+from app.core.lifespan import broker
+from app.services import get_weather_data
 
 
 app = FastAPI(
@@ -11,7 +13,20 @@ app = FastAPI(
     default_response_class=ORJSONResponse,
     lifespan=lifespan
 )
-app.include_router(get_weather_rout)
+
+
+@broker.task
+async def get_weather(user_input: GeographicalCoordinates):
+    return await get_weather_data(user_data=user_input)
+
+
+@app.get(path="/get-weather", status_code=200)
+async def create_task(lat: float, lon: float):
+    user_input = GeographicalCoordinates(latitude=lat, longitude=lon)
+    task = await get_weather.kiq(user_input=user_input)
+    result = await task.wait_result(timeout=7)
+
+    return result.return_value
 
 
 if __name__ == '__main__':

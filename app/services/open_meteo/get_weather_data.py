@@ -1,9 +1,11 @@
 from json import loads, dumps
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends
 
 from app.backend import GeographicalCoordinates
+from app.core import redis_cache
+
 from app.services.geopy import fetch_data
 from app.services.open_meteo import (
     get_humidity_status, get_pressure_status,
@@ -12,11 +14,11 @@ from app.services.open_meteo import (
 )
 
 
-async def get_weather_data(user_data: Annotated[GeographicalCoordinates, Depends()], request: Request) -> dict[str, str]:
-    redis_cache = request.app.state.redis_cache
-    cache_key = f"weather:{user_data.lat}:{user_data.lon}"
+async def get_weather_data(user_data: Annotated[GeographicalCoordinates, Depends()]) -> dict[str, str]:
+    redis = redis_cache
+    cache_key = f"weather:{user_data.latitude}:{user_data.longitude}"
 
-    cached_data = await redis_cache.get(cache_key)
+    cached_data = await redis.get(cache_key)
     if cached_data:
         result = loads(cached_data)
         # json.loads преобразует строку JSON в питон словарь, json.dumps - наоборот

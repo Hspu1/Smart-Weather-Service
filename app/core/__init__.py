@@ -1,5 +1,6 @@
 __all__ = (
-    "lifespan"
+    "lifespan",
+    "redis_cache"
 )
 
-from .lifespan import lifespan
+from .lifespan import lifespan, redis_cache

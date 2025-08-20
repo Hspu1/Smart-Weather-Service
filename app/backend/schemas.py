@@ -8,5 +8,5 @@ latitude, longitude = (
 
 
 class GeographicalCoordinates(BaseModel):
-    lat: float = latitude
-    lon: float = longitude
+    latitude: float = latitude
+    longitude: float = longitude

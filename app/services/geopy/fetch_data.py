@@ -9,8 +9,8 @@ from app.services.open_meteo import OPEN_METEO_URL
 
 async def fetch_data(data: Annotated[GeographicalCoordinates, Depends()]) -> dict[str, Any]:
     params = {
-        "latitude": data.lat,
-        "longitude": data.lon,
+        "latitude": data.latitude,
+        "longitude": data.longitude,
         "current": "temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,pressure_msl",
         "hourly": "wind_speed_10m,wind_direction_10m,wind_gusts_10m",
         "daily": "sunrise,sunset,temperature_2m_max,temperature_2m_min",

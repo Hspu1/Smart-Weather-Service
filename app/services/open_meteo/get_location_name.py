@@ -11,7 +11,7 @@ from app.backend import GeographicalCoordinates
 async def get_location_name(data: Annotated[GeographicalCoordinates, Depends()]) -> str:
     geolocator = Nominatim(user_agent="Smart-Weather-Service")
     try:
-        location = await to_thread(geolocator.reverse, (data.lat, data.lon), exactly_one=True)
+        location = await to_thread(geolocator.reverse, (data.latitude, data.longitude), exactly_one=True)
         if location:
             address = location.raw.get("address", {})
 
