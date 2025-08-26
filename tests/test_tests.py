@@ -15,8 +15,7 @@ async def test_get_weather(async_client):
         (78.2232, 15.6267)  # Лонгйир, Шпицберген (Арктика)
     ]
 
-    for i, (lat, lon) in enumerate(test_cases, 1):
-        # (i=1, (lat=40.7128, lon=-74.0060))
+    for (lat, lon) in test_cases:
         response = await async_client.get(
             "/get-weather",
             params={"latitude": lat, "longitude": lon}
