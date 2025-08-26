@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from taskiq_redis.exceptions import ResultIsMissingError
 
 from app.backend.schemas import GeographicalCoordinates
 from app.core.lifespan import broker
@@ -25,14 +26,15 @@ async def create_task(latitude: float, longitude: float):
 
 @get_weather_rout.get(path="/task-result/{task_id}", status_code=200)
 async def get_task_result(task_id: str) -> dict[str, str | dict]:
-    result = await broker.result_backend.get_result(task_id=task_id)
-    if result.is_err:
-        return {"статус": "неверный айди или географические координаты"}
+    try:
+        result = await broker.result_backend.get_result(task_id=task_id)
+        if result is None:
+            return {"статус": "выполняется"}
 
-    elif result is None:
-        return {"статус": "выполняется"}
+        return {
+            "статус": "успешно",
+            "результат": result.return_value
+        }
 
-    return {
-        "статус": "успешно",
-        "результат": result.return_value
-    }
+    except ResultIsMissingError:
+        return {"статус": "неверный айди"}
