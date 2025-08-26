@@ -15,7 +15,7 @@ async def get_weather(user_input: GeographicalCoordinates):
 
 
 @get_weather_rout.get(path="/get-weather", status_code=200)
-async def create_task(latitude: float, longitude: float):
+async def create_task(latitude: float, longitude: float) -> dict[str, str]:
     user_input = GeographicalCoordinates(latitude=latitude, longitude=longitude)
     task = await get_weather.kiq(user_input=user_input)
 
