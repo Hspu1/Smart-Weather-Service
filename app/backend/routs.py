@@ -1,10 +1,11 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 from taskiq_redis.exceptions import ResultIsMissingError
 
 from app.backend.schemas import GeographicalCoordinates
 from app.core.lifespan import broker
 from app.services import get_weather_data
-
 
 get_weather_rout = APIRouter()
 
@@ -15,8 +16,7 @@ async def get_weather(user_input: GeographicalCoordinates):
 
 
 @get_weather_rout.get(path="/get-weather", status_code=200)
-async def create_task(latitude: float, longitude: float) -> dict[str, str]:
-    user_input = GeographicalCoordinates(latitude=latitude, longitude=longitude)
+async def create_task(user_input: Annotated[GeographicalCoordinates, Depends()]) -> dict[str, str]:
     task = await get_weather.kiq(user_input=user_input)
 
     return {

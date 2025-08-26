@@ -1,4 +1,4 @@
-from pydantic import BaseModel, confloat, Field
+from pydantic import BaseModel, Field
 
 
 class GeographicalCoordinates(BaseModel):
